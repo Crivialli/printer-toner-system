@@ -1,0 +1,19 @@
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Build (Next.js específico)
+.next/
+out/
+build/
+dist/
+
+# Ambiente
+.env*.local
+.env.production
+node_modules

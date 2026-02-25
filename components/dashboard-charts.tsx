@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   BarChart,
@@ -25,13 +25,15 @@ export function DashboardCharts({ toners, movements }: DashboardChartsProps) {
   const [limit, setLimit] = useState(10)
 
   // Dados para o gráfico de estoque atual - limitado pelo valor do seletor
-  const stockData = toners
-    .slice(0, limit)
-    .map(toner => ({
-      name: toner.name.length > 15 ? toner.name.substring(0, 12) + "..." : toner.name,
-      quantidade: toner.quantity,
-      min: toner.minQuantity,
-    }))
+  const stockData = useMemo(() => {
+    return toners
+      .slice(0, limit)
+      .map(toner => ({
+        name: toner.name.length > 15 ? toner.name.substring(0, 12) + "..." : toner.name,
+        quantidade: toner.quantity,
+        min: toner.minQuantity,
+      }))
+  }, [toners, limit])
 
   // Dados para o gráfico de movimentações nos últimos 7 dias
   const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -47,7 +49,7 @@ export function DashboardCharts({ toners, movements }: DashboardChartsProps) {
     return { day, entradas, saidas }
   })
 
-  // Top 5 toners mais consumidos nos últimos 30 dias
+  // Top toners mais consumidos nos últimos 30 dias - limitado pelo valor do seletor
   const trintaDiasAtras = subDays(new Date(), 30)
   const saidasRecentes = movements.filter(
     m => m.type === 'saida' && new Date(m.date) >= trintaDiasAtras
@@ -59,10 +61,12 @@ export function DashboardCharts({ toners, movements }: DashboardChartsProps) {
     consumoPorToner[key] = (consumoPorToner[key] || 0) + m.quantity
   })
 
-  const topConsumidos = Object.entries(consumoPorToner)
-    .map(([name, total]) => ({ name, total }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5)
+  const topConsumidos = useMemo(() => {
+    return Object.entries(consumoPorToner)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, limit)
+  }, [consumoPorToner, limit])
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -125,10 +129,10 @@ export function DashboardCharts({ toners, movements }: DashboardChartsProps) {
           </CardContent>
         </Card>
 
-        {/* Top 5 toners mais consumidos */}
+        {/* Top toners mais consumidos (agora dinâmico) */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Top 5 Toners Mais Consumidos (30 dias)</CardTitle>
+            <CardTitle className="text-sm font-medium">Top {limit} Toners Mais Consumidos (30 dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
